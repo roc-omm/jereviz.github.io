@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anti-Sèche Bureautique - Seconde</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .nav-button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .nav-button:hover {
+            background-color: #2980b9;
+        }
+        .section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📚 Anti-Sèche Bureautique</h1>
+        <p>Seconde - Lycée [Nom de votre lycée]</p>
+    </header>
+
+    <nav>
+        <a href="#word" class="nav-button">📝 Word</a>
+        <a href="#excel" class="nav-button">📊 Excel</a>
+        <a href="#internet" class="nav-button">🌐 Internet</a>
+        <a href="#raccourcis" class="nav-button">⌨️ Raccourcis</a>
+    </nav>
+
+    <section id="word" class="section">
+        <h2>📝 Word - Les essentiels</h2>
+        <h3>Mise en forme rapide</h3>
+        <ul>
+            <li><strong>Ctrl+G</strong> : Gras</li>
+            <li><strong>Ctrl+I</strong> : Italique</li>
+            <li><strong>Ctrl+S</strong> : Souligné</li>
+            <li><strong>Ctrl+E</strong> : Centrer</li>
+            <li><strong>Ctrl+J</strong> : Justifier</li>
+        </ul>
+        <h3>Les styles</h3>
+        <p>Utilisez les styles (Titre 1, Titre 2, Normal) pour structurer votre document automatiquement.</p>
+    </section>
+
+    <section id="excel" class="section">
+        <h2>📊 Excel - Formules de base</h2>
+        <table>
+            <tr>
+                <th>Formule</th>
+                <th>À quoi ça sert ?</th>
+                <th>Exemple</th>
+            </tr>
+            <tr>
+                <td>=SOMME()</td>
+                <td>Additionne des cellules</td>
+                <td>=SOMME(A1:A10)</td>
+            </tr>
+            <tr>
+                <td>=MOYENNE()</td>
+                <td>Calcule la moyenne</td>
+                <td>=MOYENNE(B1:B20)</td>
+            </tr>
+            <tr>
+                <td>=SI()</td>
+                <td>Teste une condition</td>
+                <td>=SI(A1>10;"Réussi";"Échec")</td>
+            </tr>
+            <tr>
+                <td>=NB()</td>
+                <td>Compte les nombres</td>
+                <td>=NB(C1:C50)</td>
+            </tr>
+        </table>
+    </section>
+
+    <section id="internet" class="section">
+        <h2>🌐 Internet - Sécurité</h2>
+        <h3>Les bons réflexes</h3>
+        <ul>
+            <li>🔒 Vérifiez le cadenas dans la barre d'adresse</li>
+            <li>🔑 Utilisez des mots de passe différents pour chaque site</li>
+            <li>📧 Ne cliquez pas sur les liens dans les emails suspects</li>
+            <li>🔄 Mettez à jour vos logiciels régulièrement</li>
+        </ul>
+    </section>
+
+    <section id="raccourcis" class="section">
+        <h2>⌨️ Raccourcis indispensables</h2>
+        <table>
+            <tr>
+                <th>Raccourci</th>
+                <th>Action</th>
+            </tr>
+            <tr><td>Ctrl+C</td><td>Copier</td></tr>
+            <tr><td>Ctrl+X</td><td>Couper</td></tr>
+            <tr><td>Ctrl+V</td><td>Coller</td></tr>
+            <tr><td>Ctrl+Z</td><td>Annuler</td></tr>
+            <tr><td>Ctrl+Y</td><td>Rétablir</td></tr>
+            <tr><td>Ctrl+A</td><td>Tout sélectionner</td></tr>
+            <tr><td>Ctrl+F</td><td>Rechercher</td></tr>
+            <tr><td>Ctrl+P</td><td>Imprimer</td></tr>
+        </table>
+    </section>
+
+    <footer>
+        <p>Révision Bureautique - Seconde - Mise à jour : [Date]</p>
+    </footer>
+</body>
+</html>
