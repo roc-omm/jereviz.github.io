@@ -3,87 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Anti-Sèche Bureautique</title>
-    <link rel="stylesheet" href="dashboard-style.css">
+    <title>Dashboard Pédagogique - Anti-Sèche Bureautique</title>
+    <link rel="stylesheet" href="dashboard-avance.css">
+    <!-- Pour l'éditeur de texte riche -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 </head>
 <body>
     <div class="dashboard-container">
+        <!-- En-tête -->
         <header class="dashboard-header">
-            <h1>📚 Tableau de Bord Pédagogique</h1>
-            <p>Gérez vos chapitres et ressources pour la classe de Seconde</p>
-            <div class="header-actions">
-                <button onclick="showAddChapterModal()" class="btn-primary">
-                    ➕ Ajouter un chapitre
-                </button>
-            </div>
+            <h1>🏫 Tableau de Bord Pédagogique</h1>
+            <p>Gérez vos classes, matières et chapitres</p>
         </header>
 
-        <!-- Statistiques rapides -->
-        <div class="stats-container">
-            <div class="stat-card">
-                <h3>Chapitres</h3>
-                <p id="chapterCount">0</p>
-            </div>
-            <div class="stat-card">
-                <h3>Quiz disponibles</h3>
-                <p id="quizCount">0</p>
-            </div>
-            <div class="stat-card">
-                <h3>Questions totales</h3>
-                <p id="questionCount">0</p>
+        <!-- Barre de navigation hiérarchique -->
+        <div class="hierarchy-nav" id="hierarchyNav">
+            <span class="hierarchy-item active" onclick="loadView('classes')">📚 Classes</span>
+        </div>
+
+        <!-- Vue principale (change selon le niveau) -->
+        <div id="mainContent" class="main-content">
+            <!-- Les vues sont chargées dynamiquement -->
+        </div>
+
+        <!-- Modals -->
+        <div id="classModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal('classModal')">&times;</span>
+                <h2>➕ Nouvelle classe</h2>
+                <form id="classForm" onsubmit="createClass(event)">
+                    <div class="form-group">
+                        <label>Nom de la classe :</label>
+                        <input type="text" id="className" required placeholder="ex: Seconde, Première...">
+                    </div>
+                    <div class="form-group">
+                        <label>Niveau :</label>
+                        <select id="classLevel" required>
+                            <option value="lycee">Lycée</option>
+                            <option value="college">Collège</option>
+                            <option value="autre">Autre</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Couleur :</label>
+                        <input type="color" id="classColor" value="#3498db">
+                    </div>
+                    <button type="submit" class="btn-primary">Créer la classe</button>
+                </form>
             </div>
         </div>
 
-        <!-- Liste des chapitres existants -->
-        <section class="chapters-section">
-            <h2>📖 Mes chapitres</h2>
-            <div id="chaptersGrid" class="chapters-grid">
-                <!-- Les chapitres seront chargés dynamiquement ici -->
-            </div>
-        </section>
-
-        <!-- Modal pour ajouter un chapitre -->
-        <div id="addChapterModal" class="modal">
+        <div id="subjectModal" class="modal">
             <div class="modal-content">
-                <span class="close" onclick="closeModal()">&times;</span>
-                <h2>➕ Ajouter un nouveau chapitre</h2>
-                
-                <form id="chapterForm" onsubmit="createChapter(event)">
+                <span class="close" onclick="closeModal('subjectModal')">&times;</span>
+                <h2>➕ Nouvelle matière</h2>
+                <form id="subjectForm" onsubmit="createSubject(event)">
                     <div class="form-group">
-                        <label for="chapterName">Nom du chapitre :</label>
-                        <input type="text" id="chapterName" required 
-                               placeholder="ex: Word, Excel, Internet...">
+                        <label>Nom de la matière :</label>
+                        <input type="text" id="subjectName" required placeholder="ex: Bureautique, Programmation...">
                     </div>
-
                     <div class="form-group">
-                        <label for="chapterDescription">Description :</label>
-                        <textarea id="chapterDescription" rows="3" required 
-                                  placeholder="Objectifs pédagogiques du chapitre..."></textarea>
+                        <label>Description :</label>
+                        <textarea id="subjectDescription" rows="3" placeholder="Objectifs de la matière..."></textarea>
                     </div>
-
                     <div class="form-group">
-                        <label for="chapterIcon">Icône :</label>
-                        <select id="chapterIcon" required>
-                            <option value="📝">📝 Word</option>
-                            <option value="📊">📊 Excel</option>
-                            <option value="🌐">🌐 Internet</option>
-                            <option value="⌨️">⌨️ Raccourcis</option>
-                            <option value="🔒">🔒 Sécurité</option>
-                            <option value="🎯">🎯 Quiz général</option>
+                        <label>Icône :</label>
+                        <select id="subjectIcon">
+                            <option value="💻">💻 Bureautique</option>
+                            <option value="🔧">🔧 Programmation</option>
+                            <option value="🌐">🌐 Réseaux</option>
+                            <option value="🎨">🎨 Design</option>
                         </select>
                     </div>
+                    <button type="submit" class="btn-primary">Créer la matière</button>
+                </form>
+            </div>
+        </div>
 
+        <div id="chapterModal" class="modal">
+            <div class="modal-content modal-lg">
+                <span class="close" onclick="closeModal('chapterModal')">&times;</span>
+                <h2>➕ Nouveau chapitre</h2>
+                
+                <!-- Tabs pour basculer entre fondamentaux et quiz -->
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('fundamentals')">📚 Fondamentaux</button>
+                    <button class="tab-btn" onclick="switchTab('quiz')">🎯 Quiz</button>
+                </div>
+
+                <form id="chapterForm" onsubmit="createChapter(event)">
+                    <!-- Informations de base du chapitre -->
                     <div class="form-group">
-                        <label for="chapterColor">Couleur du thème :</label>
-                        <input type="color" id="chapterColor" value="#3498db">
+                        <label>Titre du chapitre :</label>
+                        <input type="text" id="chapterTitle" required placeholder="ex: Word - Les bases">
                     </div>
 
-                    <button type="submit" class="btn-primary">Créer le chapitre</button>
+                    <!-- Onglet Fondamentaux -->
+                    <div id="fundamentalsTab" class="tab-content active">
+                        <div class="form-group">
+                            <label>Objectifs pédagogiques :</label>
+                            <div id="objectivesEditor" class="rich-editor"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Points clés :</label>
+                            <div id="keyPointsEditor" class="rich-editor"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Ressources supplémentaires :</label>
+                            <div id="resourcesEditor" class="rich-editor"></div>
+                        </div>
+                    </div>
+
+                    <!-- Onglet Quiz -->
+                    <div id="quizTab" class="tab-content">
+                        <div class="quiz-builder">
+                            <div class="quiz-header">
+                                <h3>Questions du quiz</h3>
+                                <button type="button" onclick="addQuestion()" class="btn-secondary">➕ Ajouter une question</button>
+                            </div>
+                            <div id="questionsList" class="questions-list">
+                                <!-- Les questions seront ajoutées ici dynamiquement -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Créer le chapitre</button>
+                    </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Modal pour éditer les fondamentaux -->
+        <div id="editFundamentalsModal" class="modal">
+            <div class="modal-content modal-lg">
+                <span class="close" onclick="closeModal('editFundamentalsModal')">&times;</span>
+                <h2>📚 Modifier les fondamentaux</h2>
+                <div id="fundamentalsEditor" class="fundamentals-editor">
+                    <!-- Contenu chargé dynamiquement -->
+                </div>
+                <button onclick="saveFundamentals()" class="btn-primary">Enregistrer</button>
             </div>
         </div>
     </div>
 
-    <script src="dashboard.js"></script>
+    <!-- Scripts -->
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="dashboard-avance.js"></script>
 </body>
 </html>

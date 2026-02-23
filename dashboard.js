@@ -1,341 +1,502 @@
-// Gestion du stockage local des chapitres
-let chapters = JSON.parse(localStorage.getItem('chapters')) || [
-    // Chapitres par défaut
-    {
-        id: 'word',
-        name: 'Word',
-        description: 'Raccourcis, mise en forme, styles... Tout pour maîtriser le traitement de texte.',
-        icon: '📝',
-        color: '#3498db',
-        createdAt: new Date().toISOString(),
-        quizCount: 0
-    },
-    {
-        id: 'excel',
-        name: 'Excel',
-        description: 'Formules, tableaux, astuces... Le tableur n\'aura plus de secrets pour vous.',
-        icon: '📊',
-        color: '#27ae60',
-        createdAt: new Date().toISOString(),
-        quizCount: 0
-    },
-    {
-        id: 'internet',
-        name: 'Internet',
-        description: 'Navigation, recherche, sécurité en ligne... Les bons réflexes à avoir.',
-        icon: '🌐',
-        color: '#e74c3c',
-        createdAt: new Date().toISOString(),
-        quizCount: 0
+// ============================================
+// STRUCTURE DE DONNÉES
+// ============================================
+
+let pedagogieData = {
+    classes: [
+        {
+            id: 'seconde',
+            name: 'Seconde',
+            level: 'lycee',
+            color: '#3498db',
+            subjects: [
+                {
+                    id: 'bureautique',
+                    name: 'Bureautique',
+                    description: 'Maîtrise des outils bureautiques',
+                    icon: '💻',
+                    chapters: [
+                        {
+                            id: 'word-bases',
+                            title: 'Word - Les bases',
+                            fundamentals: {
+                                objectives: 'Savoir créer et mettre en forme un document',
+                                keyPoints: 'Raccourcis, styles, mise en page',
+                                resources: 'Tutoriels vidéo, exercices pratiques'
+                            },
+                            quiz: [
+                                {
+                                    question: 'Quel raccourci pour copier ?',
+                                    options: ['Ctrl+X', 'Ctrl+C', 'Ctrl+V', 'Ctrl+Z'],
+                                    correct: 1
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    currentClass: null,
+    currentSubject: null,
+    currentChapter: null
+};
+
+// Charger les données sauvegardées
+const savedData = localStorage.getItem('pedagogieData');
+if (savedData) {
+    pedagogieData = JSON.parse(savedData);
+}
+
+// ============================================
+// GESTION DE LA HIÉRARCHIE
+// ============================================
+
+let currentView = 'classes';
+let currentClassId = null;
+let currentSubjectId = null;
+
+function loadView(view, classId = null, subjectId = null) {
+    currentView = view;
+    currentClassId = classId;
+    currentSubjectId = subjectId;
+    
+    updateHierarchyNav();
+    
+    switch(view) {
+        case 'classes':
+            displayClasses();
+            break;
+        case 'subjects':
+            displaySubjects(classId);
+            break;
+        case 'chapters':
+            displayChapters(classId, subjectId);
+            break;
     }
-];
-
-// Initialisation au chargement
-document.addEventListener('DOMContentLoaded', function() {
-    updateStats();
-    renderChapters();
-});
-
-// Afficher le modal
-function showAddChapterModal() {
-    document.getElementById('addChapterModal').style.display = 'block';
 }
 
-// Fermer le modal
-function closeModal() {
-    document.getElementById('addChapterModal').style.display = 'none';
-    document.getElementById('chapterForm').reset();
+function updateHierarchyNav() {
+    const nav = document.getElementById('hierarchyNav');
+    let html = '<span class="hierarchy-item" onclick="loadView(\'classes\')">📚 Classes</span>';
+    
+    if (currentClassId) {
+        const classe = pedagogieData.classes.find(c => c.id === currentClassId);
+        if (classe) {
+            html += `<span class="hierarchy-separator">›</span>`;
+            html += `<span class="hierarchy-item" onclick="loadView('subjects', '${currentClassId}')">${classe.name}</span>`;
+        }
+    }
+    
+    if (currentSubjectId) {
+        const classe = pedagogieData.classes.find(c => c.id === currentClassId);
+        const subject = classe?.subjects.find(s => s.id === currentSubjectId);
+        if (subject) {
+            html += `<span class="hierarchy-separator">›</span>`;
+            html += `<span class="hierarchy-item active">${subject.name}</span>`;
+        }
+    }
+    
+    nav.innerHTML = html;
 }
 
-// Créer un nouveau chapitre
+// ============================================
+// AFFICHAGE DES CLASSES
+// ============================================
+
+function displayClasses() {
+    const content = document.getElementById('mainContent');
+    
+    let html = `
+        <div class="classes-header">
+            <h2>📚 Classes</h2>
+            <button onclick="showModal('classModal')" class="btn-primary">➕ Nouvelle classe</button>
+        </div>
+        <div class="classes-grid">
+    `;
+    
+    pedagogieData.classes.forEach(classe => {
+        const subjectCount = classe.subjects?.length || 0;
+        const chapterCount = classe.subjects?.reduce((acc, s) => acc + (s.chapters?.length || 0), 0) || 0;
+        
+        html += `
+            <div class="class-card" onclick="loadView('subjects', '${classe.id}')" style="--class-color: ${classe.color}">
+                <div class="class-header">
+                    <h3 class="class-title">${classe.name}</h3>
+                    <span class="class-level">${getLevelLabel(classe.level)}</span>
+                </div>
+                <div class="class-stats">
+                    <span>📚 ${subjectCount} matière${subjectCount > 1 ? 's' : ''}</span>
+                    <span>📖 ${chapterCount} chapitre${chapterCount > 1 ? 's' : ''}</span>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    content.innerHTML = html;
+}
+
+// ============================================
+// AFFICHAGE DES MATIÈRES
+// ============================================
+
+function displaySubjects(classId) {
+    const classe = pedagogieData.classes.find(c => c.id === classId);
+    if (!classe) return;
+    
+    const content = document.getElementById('mainContent');
+    
+    let html = `
+        <div class="subjects-header">
+            <button onclick="loadView('classes')" class="back-button">← Retour aux classes</button>
+            <h2>📚 ${classe.name} - Matières</h2>
+            <button onclick="showModal('subjectModal')" class="btn-primary">➕ Nouvelle matière</button>
+        </div>
+        <div class="subjects-grid">
+    `;
+    
+    (classe.subjects || []).forEach(subject => {
+        const chapterCount = subject.chapters?.length || 0;
+        
+        html += `
+            <div class="subject-card" onclick="loadView('chapters', '${classId}', '${subject.id}')">
+                <div class="subject-icon">${subject.icon}</div>
+                <h3 class="subject-title">${subject.name}</h3>
+                <p class="subject-description">${subject.description || ''}</p>
+                <div class="subject-meta">
+                    <span>📖 ${chapterCount} chapitre${chapterCount > 1 ? 's' : ''}</span>
+                    <span>✏️ ${getQuizCount(subject)} quiz</span>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    content.innerHTML = html;
+}
+
+// ============================================
+// AFFICHAGE DES CHAPITRES
+// ============================================
+
+function displayChapters(classId, subjectId) {
+    const classe = pedagogieData.classes.find(c => c.id === classId);
+    const subject = classe?.subjects.find(s => s.id === subjectId);
+    if (!classe || !subject) return;
+    
+    const content = document.getElementById('mainContent');
+    
+    let html = `
+        <div class="chapters-header">
+            <button onclick="loadView('subjects', '${classId}')" class="back-button">← Retour aux matières</button>
+            <h2>📚 ${classe.name} - ${subject.name}</h2>
+            <button onclick="showModal('chapterModal')" class="btn-primary">➕ Nouveau chapitre</button>
+        </div>
+        <div class="chapters-grid">
+    `;
+    
+    (subject.chapters || []).forEach(chapter => {
+        html += `
+            <div class="chapter-card">
+                <h3 class="chapter-title">${chapter.title}</h3>
+                
+                <div class="chapter-preview">
+                    <div class="preview-section">
+                        <h4>Objectifs</h4>
+                        <div class="preview-content">${stripHtml(chapter.fundamentals?.objectives || '')}</div>
+                    </div>
+                    
+                    <div class="preview-section">
+                        <h4>Quiz</h4>
+                        <div class="preview-content">${chapter.quiz?.length || 0} questions</div>
+                    </div>
+                </div>
+                
+                <div class="chapter-actions">
+                    <button onclick="editFundamentals('${classId}', '${subjectId}', '${chapter.id}')" class="btn-edit">
+                        ✏️ Modifier
+                    </button>
+                    <button onclick="viewQuiz('${classId}', '${subjectId}', '${chapter.id}')" class="btn-view">
+                        📝 Voir quiz
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    content.innerHTML = html;
+}
+
+// ============================================
+// CRÉATION D'UNE CLASSE
+// ============================================
+
+function createClass(event) {
+    event.preventDefault();
+    
+    const newClass = {
+        id: generateId(document.getElementById('className').value),
+        name: document.getElementById('className').value,
+        level: document.getElementById('classLevel').value,
+        color: document.getElementById('classColor').value,
+        subjects: []
+    };
+    
+    pedagogieData.classes.push(newClass);
+    saveData();
+    closeModal('classModal');
+    displayClasses();
+}
+
+// ============================================
+// CRÉATION D'UNE MATIÈRE
+// ============================================
+
+function createSubject(event) {
+    event.preventDefault();
+    
+    const newSubject = {
+        id: generateId(document.getElementById('subjectName').value),
+        name: document.getElementById('subjectName').value,
+        description: document.getElementById('subjectDescription').value,
+        icon: document.getElementById('subjectIcon').value,
+        chapters: []
+    };
+    
+    const classe = pedagogieData.classes.find(c => c.id === currentClassId);
+    if (classe) {
+        if (!classe.subjects) classe.subjects = [];
+        classe.subjects.push(newSubject);
+        saveData();
+        closeModal('subjectModal');
+        displaySubjects(currentClassId);
+    }
+}
+
+// ============================================
+// GESTION DU CHAPITRE (AVEC QUIZ)
+// ============================================
+
+let questions = [];
+
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    if (tab === 'fundamentals') {
+        document.querySelectorAll('.tab-btn')[0].classList.add('active');
+        document.getElementById('fundamentalsTab').classList.add('active');
+    } else {
+        document.querySelectorAll('.tab-btn')[1].classList.add('active');
+        document.getElementById('quizTab').classList.add('active');
+    }
+}
+
+function addQuestion() {
+    const questionId = Date.now();
+    const questionHtml = `
+        <div class="question-card" id="question-${questionId}">
+            <div class="question-header">
+                <span class="question-number">Question ${questions.length + 1}</span>
+                <button type="button" onclick="removeQuestion(${questionId})" class="remove-question">🗑️</button>
+            </div>
+            <div class="question-text">
+                <input type="text" placeholder="Votre question..." onchange="updateQuestion(${questionId}, 'text', this.value)">
+            </div>
+            <div class="options-container">
+                ${[0,1,2,3].map(i => `
+                    <div class="option-item">
+                        <input type="radio" name="correct-${questionId}" value="${i}" onchange="setCorrectAnswer(${questionId}, ${i})">
+                        <input type="text" placeholder="Option ${i+1}" onchange="updateQuestion(${questionId}, 'option${i}', this.value)">
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('questionsList').insertAdjacentHTML('beforeend', questionHtml);
+    
+    questions.push({
+        id: questionId,
+        text: '',
+        options: ['', '', '', ''],
+        correct: null
+    });
+}
+
+function removeQuestion(questionId) {
+    document.getElementById(`question-${questionId}`).remove();
+    questions = questions.filter(q => q.id !== questionId);
+}
+
+function updateQuestion(questionId, field, value) {
+    const question = questions.find(q => q.id === questionId);
+    if (question) {
+        if (field === 'text') {
+            question.text = value;
+        } else if (field.startsWith('option')) {
+            const index = parseInt(field.replace('option', ''));
+            question.options[index] = value;
+        }
+    }
+}
+
+function setCorrectAnswer(questionId, optionIndex) {
+    const question = questions.find(q => q.id === questionId);
+    if (question) {
+        question.correct = optionIndex;
+    }
+}
+
 function createChapter(event) {
     event.preventDefault();
     
-    const chapterName = document.getElementById('chapterName').value;
-    const chapterDescription = document.getElementById('chapterDescription').value;
-    const chapterIcon = document.getElementById('chapterIcon').value;
-    const chapterColor = document.getElementById('chapterColor').value;
+    const chapterTitle = document.getElementById('chapterTitle').value;
     
-    // Créer un ID valide (sans accents, en minuscules)
-    const chapterId = chapterName
+    // Récupérer le contenu des éditeurs (à initialiser avec Quill)
+    const fundamentals = {
+        objectives: document.getElementById('objectivesEditor').innerHTML || '',
+        keyPoints: document.getElementById('keyPointsEditor').innerHTML || '',
+        resources: document.getElementById('resourcesEditor').innerHTML || ''
+    };
+    
+    const newChapter = {
+        id: generateId(chapterTitle),
+        title: chapterTitle,
+        fundamentals: fundamentals,
+        quiz: questions.filter(q => q.text && q.correct !== null && q.options.every(o => o))
+    };
+    
+    const classe = pedagogieData.classes.find(c => c.id === currentClassId);
+    const subject = classe?.subjects.find(s => s.id === currentSubjectId);
+    
+    if (subject) {
+        if (!subject.chapters) subject.chapters = [];
+        subject.chapters.push(newChapter);
+        saveData();
+        closeModal('chapterModal');
+        displayChapters(currentClassId, currentSubjectId);
+        
+        // Réinitialiser le formulaire
+        document.getElementById('chapterForm').reset();
+        questions = [];
+        document.getElementById('questionsList').innerHTML = '';
+    }
+}
+
+// ============================================
+// ÉDITION DES FONDAMENTAUX
+// ============================================
+
+function editFundamentals(classId, subjectId, chapterId) {
+    const classe = pedagogieData.classes.find(c => c.id === classId);
+    const subject = classe?.subjects.find(s => s.id === subjectId);
+    const chapter = subject?.chapters.find(c => c.id === chapterId);
+    
+    if (chapter) {
+        const modal = document.getElementById('editFundamentalsModal');
+        const editor = document.getElementById('fundamentalsEditor');
+        
+        editor.innerHTML = `
+            <h3>${chapter.title}</h3>
+            <div class="form-group">
+                <label>Objectifs :</label>
+                <div id="editObjectives" class="rich-editor">${chapter.fundamentals?.objectives || ''}</div>
+            </div>
+            <div class="form-group">
+                <label>Points clés :</label>
+                <div id="editKeyPoints" class="rich-editor">${chapter.fundamentals?.keyPoints || ''}</div>
+            </div>
+            <div class="form-group">
+                <label>Ressources :</label>
+                <div id="editResources" class="rich-editor">${chapter.fundamentals?.resources || ''}</div>
+            </div>
+        `;
+        
+        modal.style.display = 'block';
+        
+        // Sauvegarder le contexte pour la sauvegarde
+        window.currentEditContext = { classId, subjectId, chapterId };
+    }
+}
+
+function saveFundamentals() {
+    const context = window.currentEditContext;
+    if (!context) return;
+    
+    const classe = pedagogieData.classes.find(c => c.id === context.classId);
+    const subject = classe?.subjects.find(s => s.id === context.subjectId);
+    const chapter = subject?.chapters.find(c => c.id === context.chapterId);
+    
+    if (chapter) {
+        chapter.fundamentals = {
+            objectives: document.getElementById('editObjectives')?.innerHTML || '',
+            keyPoints: document.getElementById('editKeyPoints')?.innerHTML || '',
+            resources: document.getElementById('editResources')?.innerHTML || ''
+        };
+        
+        saveData();
+        closeModal('editFundamentalsModal');
+        displayChapters(context.classId, context.subjectId);
+    }
+}
+
+// ============================================
+// FONCTIONS UTILITAIRES
+// ============================================
+
+function generateId(name) {
+    return name
         .toLowerCase()
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-z0-9]/g, '-');
-    
-    const newChapter = {
-        id: chapterId,
-        name: chapterName,
-        description: chapterDescription,
-        icon: chapterIcon,
-        color: chapterColor,
-        createdAt: new Date().toISOString(),
-        quizCount: 0
+}
+
+function getLevelLabel(level) {
+    const labels = {
+        'lycee': 'Lycée',
+        'college': 'Collège',
+        'autre': 'Autre'
     };
-    
-    chapters.push(newChapter);
-    localStorage.setItem('chapters', JSON.stringify(chapters));
-    
-    // Créer les dossiers et fichiers du chapitre (simulé)
-    createChapterStructure(newChapter);
-    
-    closeModal();
-    updateStats();
-    renderChapters();
+    return labels[level] || level;
 }
 
-// Créer la structure du chapitre
-function createChapterStructure(chapter) {
-    // Dans un environnement réel, on enverrait ces données au serveur
-    console.log('Création du chapitre :', chapter);
-    
-    // Template pour la page du chapitre
-    const chapterPageTemplate = `
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${chapter.name} - Anti-Sèche Bureautique</title>
-    <link rel="stylesheet" href="../dashboard-style.css">
-    <style>
-        :root { --chapter-color: ${chapter.color}; }
-        .chapter-header { background: ${chapter.color}; }
-    </style>
-</head>
-<body>
-    <div class="chapter-container">
-        <header class="chapter-header">
-            <a href="../index.html" class="back-link">← Retour au tableau de bord</a>
-            <h1>${chapter.icon} ${chapter.name}</h1>
-            <p>${chapter.description}</p>
-        </header>
-
-        <section class="fundamentals">
-            <h2>📚 Les fondamentaux</h2>
-            <div class="content-card">
-                <h3>Objectifs du chapitre</h3>
-                <ul>
-                    <li>Objectif 1 à définir</li>
-                    <li>Objectif 2 à définir</li>
-                    <li>Objectif 3 à définir</li>
-                </ul>
-            </div>
-
-            <div class="content-card">
-                <h3>Points clés à retenir</h3>
-                <ul>
-                    <li>Point clé 1</li>
-                    <li>Point clé 2</li>
-                    <li>Point clé 3</li>
-                </ul>
-            </div>
-        </section>
-
-        <section class="quiz-section">
-            <h2>🎯 Quiz du chapitre</h2>
-            <div class="quiz-actions">
-                <button onclick="location.href='quiz.html'" class="btn-primary">
-                    Commencer le quiz
-                </button>
-            </div>
-        </section>
-    </div>
-</body>
-</html>
-    `;
-    
-    // Template pour le quiz du chapitre
-    const quizTemplate = `
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz ${chapter.name} - Anti-Sèche Bureautique</title>
-    <link rel="stylesheet" href="../dashboard-style.css">
-    <style>
-        :root { --chapter-color: ${chapter.color}; }
-        .quiz-header { background: ${chapter.color}; }
-    </style>
-</head>
-<body>
-    <div class="quiz-container">
-        <header class="quiz-header">
-            <a href="index.html" class="back-link">← Retour au chapitre</a>
-            <h1>${chapter.icon} Quiz : ${chapter.name}</h1>
-            <p>Testez vos connaissances</p>
-        </header>
-
-        <form id="quizForm" class="quiz-form">
-            <!-- Les questions seront ajoutées dynamiquement -->
-        </form>
-
-        <div class="quiz-actions">
-            <button onclick="submitQuiz()" class="btn-primary">📋 Voir mes résultats</button>
-        </div>
-
-        <div id="results" class="results" style="display: none;">
-            <h2>📊 Vos résultats</h2>
-            <div id="scoreDisplay"></div>
-            <div id="correctionDetails"></div>
-        </div>
-    </div>
-
-    <script>
-        const reponses = {}; // À définir avec les bonnes réponses
-        const libelles = {}; // À définir avec les libellés
-
-        function submitQuiz() {
-            // Logique de correction (à implémenter)
-            alert('Quiz en cours de construction ! Ajoutez vos questions.');
-        }
-    </script>
-</body>
-</html>
-    `;
-    
-    // Note: Dans un environnement réel avec serveur, on créerait les fichiers
-    // Pour GitHub Pages, on peut générer les URLs et guider l'utilisateur
-    alert(`Chapitre "${chapter.name}" créé !\n\nPour finaliser :\n1. Créez un dossier "${chapter.id}"\n2. Ajoutez index.html et quiz.html\n3. Utilisez les templates fournis`);
+function getQuizCount(subject) {
+    return subject.chapters?.reduce((acc, ch) => acc + (ch.quiz?.length || 0), 0) || 0;
 }
 
-// Mettre à jour les statistiques
-function updateStats() {
-    document.getElementById('chapterCount').textContent = chapters.length;
+function stripHtml(html) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || '';
+}
+
+function saveData() {
+    localStorage.setItem('pedagogieData', JSON.stringify(pedagogieData));
+}
+
+function showModal(modalId) {
+    document.getElementById(modalId).style.display = 'block';
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+// Initialisation des éditeurs riches
+document.addEventListener('DOMContentLoaded', function() {
+    displayClasses();
     
-    let totalQuizzes = 0;
-    let totalQuestions = 0;
-    
-    chapters.forEach(chapter => {
-        totalQuizzes += chapter.quizCount || 0;
-        // Simulation : en vrai, on compterait les questions depuis les fichiers
-        totalQuestions += 10; // 10 questions par défaut
-    });
-    
-    document.getElementById('quizCount').textContent = totalQuizzes;
-    document.getElementById('questionCount').textContent = totalQuestions;
-}
+    // Initialiser les éditeurs Quill quand les modals sont ouverts
+    // (à implémenter selon vos besoins)
+});
 
-// Afficher tous les chapitres
-function renderChapters() {
-    const grid = document.getElementById('chaptersGrid');
-    grid.innerHTML = '';
-    
-    chapters.forEach(chapter => {
-        const card = createChapterCard(chapter);
-        grid.appendChild(card);
-    });
-}
-
-// Créer une carte pour un chapitre
-function createChapterCard(chapter) {
-    const card = document.createElement('div');
-    card.className = 'chapter-card';
-    card.style.setProperty('--chapter-color', chapter.color);
-    
-    const createdDate = new Date(chapter.createdAt).toLocaleDateString('fr-FR');
-    
-    card.innerHTML = `
-        <div class="chapter-icon">${chapter.icon}</div>
-        <h3>${chapter.name}</h3>
-        <p class="chapter-description">${chapter.description}</p>
-        <div class="chapter-meta">
-            <span>Créé le ${createdDate}</span>
-            <span>${chapter.quizCount || 0} quiz</span>
-        </div>
-        <div class="chapter-actions">
-            <a href="${chapter.id}/" class="btn-view">Voir</a>
-            <button onclick="editChapter('${chapter.id}')" class="btn-edit">Modifier</button>
-            <button onclick="deleteChapter('${chapter.id}')" class="btn-delete">Supprimer</button>
-            <button onclick="addQuiz('${chapter.id}')" class="btn-add-quiz">+ Quiz</button>
-        </div>
-    `;
-    
-    return card;
-}
-
-// Modifier un chapitre
-function editChapter(chapterId) {
-    const chapter = chapters.find(c => c.id === chapterId);
-    if (chapter) {
-        // Remplir le formulaire avec les données existantes
-        document.getElementById('chapterName').value = chapter.name;
-        document.getElementById('chapterDescription').value = chapter.description;
-        document.getElementById('chapterIcon').value = chapter.icon;
-        document.getElementById('chapterColor').value = chapter.color;
-        
-        // Modifier le titre du modal
-        document.querySelector('#addChapterModal h2').textContent = '✏️ Modifier le chapitre';
-        
-        // Changer le comportement du formulaire
-        const form = document.getElementById('chapterForm');
-        form.onsubmit = function(event) {
-            event.preventDefault();
-            updateChapter(chapterId);
-        };
-        
-        showAddChapterModal();
-    }
-}
-
-// Mettre à jour un chapitre
-function updateChapter(chapterId) {
-    const index = chapters.findIndex(c => c.id === chapterId);
-    if (index !== -1) {
-        chapters[index] = {
-            ...chapters[index],
-            name: document.getElementById('chapterName').value,
-            description: document.getElementById('chapterDescription').value,
-            icon: document.getElementById('chapterIcon').value,
-            color: document.getElementById('chapterColor').value
-        };
-        
-        localStorage.setItem('chapters', JSON.stringify(chapters));
-        closeModal();
-        renderChapters();
-        
-        // Remettre le formulaire en mode création
-        resetFormToCreate();
-    }
-}
-
-// Supprimer un chapitre
-function deleteChapter(chapterId) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce chapitre ? Cette action est irréversible.')) {
-        chapters = chapters.filter(c => c.id !== chapterId);
-        localStorage.setItem('chapters', JSON.stringify(chapters));
-        renderChapters();
-        updateStats();
-    }
-}
-
-// Ajouter un quiz à un chapitre
-function addQuiz(chapterId) {
-    const chapter = chapters.find(c => c.id === chapterId);
-    if (chapter) {
-        chapter.quizCount = (chapter.quizCount || 0) + 1;
-        localStorage.setItem('chapters', JSON.stringify(chapters));
-        updateStats();
-        renderChapters();
-        
-        // Rediriger vers l'éditeur de quiz (à implémenter)
-        alert(`Nouveau quiz ajouté au chapitre "${chapter.name}" !`);
-    }
-}
-
-// Réinitialiser le formulaire en mode création
-function resetFormToCreate() {
-    document.querySelector('#addChapterModal h2').textContent = '➕ Ajouter un nouveau chapitre';
-    const form = document.getElementById('chapterForm');
-    form.onsubmit = createChapter;
-}
-
-// Fermer le modal si on clique en dehors
+// Fermer les modals en cliquant dehors
 window.onclick = function(event) {
-    const modal = document.getElementById('addChapterModal');
-    if (event.target === modal) {
-        closeModal();
-        resetFormToCreate();
+    if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
     }
-}
+};
