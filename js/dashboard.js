@@ -969,6 +969,7 @@ function startQuiz(classId, subjectId, chapterId) {
     window.location.href = `quiz.html?class=${classId}&subject=${subjectId}&chapter=${chapterId}`;
 }
 
+<<<<<<< Updated upstream
 function startRevisionQuiz(classId, subjectId, chapterId) {
     const subject = findSubject(classId, subjectId);
     const chapter = subject?.chapters.find(c => c.id === chapterId);
@@ -986,6 +987,8 @@ function startRevisionQuiz(classId, subjectId, chapterId) {
 
 
 
+=======
+>>>>>>> Stashed changes
 // ============================================
 // FONCTIONS D'ÉDITION ET SUPPRESSION
 // ============================================

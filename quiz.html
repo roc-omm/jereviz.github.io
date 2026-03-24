@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<<<<<<< Updated upstream
     <title>Quiz</title>
     <link rel="stylesheet" href="css/dashboard-modern.css">
     <link rel="stylesheet" href="css/quiz.css">
@@ -315,5 +316,36 @@
         // Charger le quiz au démarrage
         document.addEventListener('DOMContentLoaded', loadQuiz);
     </script>
+=======
+    <title>Quiz - Révisions</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <div id="chapterInfo"></div>
+            <div class="progress-bar">
+                <div id="quizProgress" class="progress-fill"></div>
+            </div>
+            <div id="progressText" class="progress-text"></div>
+        </div>
+        
+        <div id="questionContainer" class="quiz-content"></div>
+        
+        <div id="quizControls" class="quiz-navigation" style="display: none;">
+            <button id="prevBtn" class="btn btn-secondary" disabled>
+                <i class="fas fa-arrow-left"></i>
+                Précédent
+            </button>
+            <button id="nextBtn" class="btn btn-primary" disabled>
+                Suivant
+                <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+    
+    <script src="js/quiz.js"></script>
+>>>>>>> Stashed changes
 </body>
 </html>
