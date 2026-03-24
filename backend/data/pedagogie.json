@@ -63,13 +63,28 @@
                 "keyPoints": "",
                 "resources": ""
               },
-              "quiz": []
+              "quiz": [
+                {
+                  "question": "le matin on dit",
+                  "options": [
+                    "salut",
+                    "bonjour",
+                    "hola",
+                    "bonsoir"
+                  ],
+                  "correct": 1
+                }
+              ]
             }
           ]
         }
       ]
     }
   ],
+<<<<<<< Updated upstream
   "lastUpdate": "2026-03-24T08:05:52.014Z",
+=======
+  "lastUpdate": "2026-03-24T08:36:09.640Z",
+>>>>>>> Stashed changes
   "version": "1.0.0"
 }
