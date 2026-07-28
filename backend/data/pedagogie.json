@@ -9,8 +9,8 @@
         {
           "id": "informatique-1774344789397",
           "name": "Informatique",
-          "description": "",
-          "icon": "📚",
+          "description": "Prise en main de l'outil informatique",
+          "icon": "💻",
           "chapters": [
             {
               "id": "generalites-1774344849736",
@@ -45,6 +45,13 @@
               ]
             }
           ]
+        },
+        {
+          "id": "francais-1785227147279",
+          "name": "Français",
+          "description": "Expression et communication Française",
+          "icon": "📝",
+          "chapters": []
         }
       ]
     },
@@ -110,6 +117,6 @@
       "subjects": []
     }
   ],
-  "lastUpdate": "2026-05-20T17:01:18.209Z",
+  "lastUpdate": "2026-07-28T08:29:27.834Z",
   "version": "1.0.0"
 }
